@@ -1,0 +1,56 @@
+
+
+```{r}
+library(fpp2)
+
+TOTALNSA <- read.csv("TOTALNSA.csv")
+TOTALNSA_ts <- ts(TOTALNSA$TOTALNSA, start = c(1976, 1), frequency = 12)
+
+# 1. Examine the data
+# This plot shows vehicle sales over time and helps identify seasonal patterns.
+head(TOTALNSA_ts)
+plot(TOTALNSA_ts)
+```
+```{r}
+stl_decomp <- stl(TOTALNSA_ts, s.window = "periodic")
+plot(stl_decomp)
+attributes(stl_decomp)
+# STL separates vehicle sales into seasonal, trend, and remainder components.
+```
+```{r}
+seasadj(stl_decomp)
+
+plot(TOTALNSA_ts)
+lines(seasadj(stl_decomp), col = "red")
+# Seasonal adjustment removes recurring seasonal effects to make the underlying sales pattern easier to examine.
+```
+```{r}
+f_stl <- forecast(stl_decomp, h = 15)
+f_stl
+plot(f_stl)
+# This model forecasts vehicle sales for the next 15 months using the trend and seasonal patterns.
+```
+```{r}
+decomp_add <- decompose(TOTALNSA_ts, type = "additive")
+attributes(decomp_add)
+plot(decomp_add)
+seasadj(decomp_add)
+# The additive model assumes seasonal changes stay approximately constant in size over time.
+```
+```{r}
+decomp_mult <- decompose(TOTALNSA_ts, type = "multiplicative")
+attributes(decomp_mult)
+plot(decomp_mult)
+seasadj(decomp_mult)
+# The multiplicative model assumes seasonal changes vary proportionally with the overall sales level.
+```
+```{r}
+log_TOTALNSA <- log(TOTALNSA_ts)
+
+stl_log <- stl(log_TOTALNSA, s.window = "periodic")
+plot(stl_log)
+
+seasadj_mult <- exp(seasadj(stl_log))
+head(seasadj_mult)
+# Taking the logarithm allows STL to examine proportional seasonal patterns; the adjusted values are then converted back to the original scale.
+```
